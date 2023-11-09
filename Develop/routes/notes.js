@@ -1,13 +1,13 @@
 const notes = require('express').Router();
-const { readFromFile, readAndAppend } = require('../helpers/fsUtil');
+const { readFromFile, writeToFile, readAndAppend } = require('../helpers/fsUtil');
 const { v4: uuidv4 } = require('uuid');
 
-// GET Route for retrieving all the tips
+// GET Route for retrieving all notes
 notes.get('/', (req, res) => {
-  readFromFile('./db.json').then((data) => res.json(JSON.parse(data)));
-});
+  readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
+}); 
 
-// POST Route for a new UX/UI tip
+// POST Route for a new note
 notes.post('/', (req, res) => {
   console.log(req.body);
 
@@ -20,10 +20,24 @@ notes.post('/', (req, res) => {
     };
 
     readAndAppend(newNote, './db/db.json');
-    res.json(`Tip added successfully`);
+    res.json(`Note saved successfully`);
   } else {
-    res.error('Error in adding tip');
+    res.error('Error in saving note');
   }
 });
+
+// DELETE Route for a deleted note
+notes.delete('/:id', (req, res) => {
+  const delNote = JSON.parse(req.params.id)
+
+  readFromFile('./db/db.json')
+    .then((data) => JSON.parse(data))
+    .then((json) => {
+      const result = json.filter((note) => note.text !== delNote.text);
+
+      writeToFile('./db/db.json', result);
+
+      res.json(`Note has been deleted 🗑️`);
+})});
 
 module.exports = notes;
